@@ -7,6 +7,7 @@ export interface reelMetadata{
     caption: string,
     transcript: string,
     comments: Comments[],
+    hashtags: string[]
     shortCode: string,
     thumbnail: string,
     videoURL: string,
