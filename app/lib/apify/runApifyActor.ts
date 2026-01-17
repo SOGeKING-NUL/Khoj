@@ -1,6 +1,7 @@
+import { z } from 'zod';
 import client from './apify'
-import "./types"
-import { reelMetadata } from './types';
+import "./schema"
+import { reelMetadataSchema } from './schema';
 
 // const runHpix= await client.actor('hpix/ig-reels-scraper').call({
 //   "custom_functions": "{ shouldSkip: (data) => false, shouldContinue: (data) => true}",
@@ -14,7 +15,7 @@ import { reelMetadata } from './types';
 //   "reels_count": 12
 // });
 
-async function getReelData(reelUrl:string): Promise<reelMetadata>{
+async function getReelData(reelUrl:string): Promise<z.infer< typeof reelMetadataSchema>>{
 
     const run = await client.actor("apify/instagram-reel-scraper").call({
     "includeDownloadedVideo": false,
@@ -35,7 +36,7 @@ async function getReelData(reelUrl:string): Promise<reelMetadata>{
         throw new Error('No items found for this reel.');
     };
 
-    const processedItems: reelMetadata= {
+    const processedItems: z.infer< typeof reelMetadataSchema>= {
         url: (items[0] as any).url,
         caption: (items[0] as any).caption,
         transcript: (items[0] as any).transcript,

@@ -9,11 +9,13 @@
     "start": "next start"
   },
   "dependencies": {
+    "@openrouter/ai-sdk-provider": "^1.5.4",
+    "ai": "^5.0.121",
     "apify-client": "^2.21.0",
-    "dotenv": "^17.2.3",
     "next": "16.1.2",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
