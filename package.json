@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@googlemaps/places": "^2.2.0",
     "@openrouter/ai-sdk-provider": "^1.5.4",
     "ai": "^5.0.121",
     "apify-client": "^2.21.0",

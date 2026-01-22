@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const locationSchema = z.object({
+export const LocationSchema = z.object({
     spotFound: z.boolean(),
     place: z.object({
         name: z.string(),

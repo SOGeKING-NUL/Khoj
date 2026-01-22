@@ -20,8 +20,8 @@ async function getReelData(reelUrl:string): Promise<z.infer< typeof reelMetadata
     const run = await client.actor("apify/instagram-reel-scraper").call({
     "includeDownloadedVideo": false,
     "includeSharesCount": false,
-    "includeTranscript": true,
-    "resultsLimit": 27,
+    "includeTranscript": false,
+    "resultsLimit": 2,
     "skipPinnedPosts": false,
     "username": [
         reelUrl
@@ -30,8 +30,9 @@ async function getReelData(reelUrl:string): Promise<z.infer< typeof reelMetadata
 
     const {items}= await client.dataset(run.defaultDatasetId).listItems();
     // `items` is an array of dataset items returned by the Apify actor.
-    // Since we're processing a single reel URL, `items[0]` represents the metadata for that reel.
+    // Since we're processing a single reel URL, `items[0]` represents the metadata for the first reel.
     // If the actor returns multiple items, this would access the first one; add error handling if needed.
+
     if(!items || items.length == 0){
         throw new Error('No items found for this reel.');
     };

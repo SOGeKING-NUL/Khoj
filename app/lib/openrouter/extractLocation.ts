@@ -1,14 +1,14 @@
 import { generateObject } from "ai";
 import { z } from "zod";
 import { reelMetadataSchema } from "../apify/schema";
-import {locationSchema} from "./schema";
+import {LocationSchema} from "./schema";
 import { openrouter } from "@openrouter/ai-sdk-provider";
 
-async function ExtractLocation(reelMetadata: z.infer< typeof reelMetadataSchema>): Promise<z.infer<typeof locationSchema>>{
+async function ExtractLocation(reelMetadata: z.infer< typeof reelMetadataSchema>): Promise<z.infer<typeof LocationSchema>>{
 
     const {object}= await generateObject({
         model: openrouter("anthropic/claude-sonnet-4.5"),
-        schema: locationSchema,
+        schema: LocationSchema,
         prompt:`You are a location extraction expert for travel and food content from Instagram reels.
 
             **Your Task:** Extract the PRIMARY place/location mentioned or shown in this reel.

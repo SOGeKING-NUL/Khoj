@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import getReelData from "../../lib/apify/runApifyActor";
 import ExtractLocation from "@/app/lib/openrouter/extractLocation";
+import { getLocationGeodata } from "@/app/lib/googlePlaces/textSearch";
 
 export async function POST(req: NextRequest){
     
@@ -15,8 +16,9 @@ export async function POST(req: NextRequest){
 
         const metadata= await getReelData(url);
         const location= await ExtractLocation(metadata);
+        const geodata= await getLocationGeodata(location);
         
-        return NextResponse.json({metadata, location});
+        return NextResponse.json({metadata, location, geodata});
 
 
     }catch(err){
