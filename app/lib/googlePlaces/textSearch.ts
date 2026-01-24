@@ -30,7 +30,7 @@ export async function getLocationGeodata(locationSchema: z.infer<typeof Location
             {
                 otherArgs: {
                     headers: {
-                        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.types'
+                        'X-Goog-FieldMask': 'places.id,places.displayName,places.formattedAddress,places.location,places.types' //https://developers.google.com/maps/documentation/places/web-service/text-search#fieldmask
                     }
                 }
             }
@@ -47,7 +47,7 @@ export async function getLocationGeodata(locationSchema: z.infer<typeof Location
             displayName: result.displayName,
             formattedAddress: result.formattedAddress,
             lat: result.location?.latitude,
-            long: result.location?.longitude,
+            lng: result.location?.longitude,
             type: result.types
         };
     }catch(error){
@@ -73,5 +73,5 @@ export async function getLocationGeodata(locationSchema: z.infer<typeof Location
 //   })
 //   .then(result => {
 //     console.log('✅ Success! Location retrieved:');
-//     console.log(JSON.stringify(result, null, 2));
+//     console.log(JSON.stringify(result));
 //   });
