@@ -3,13 +3,9 @@
 
   export async function GET() {
     try {
-      // ✅ FIX: Return as array
       const places = [{
         placeId: "ChIJyy_Vxxj9DDkRPXF11X7EfT0",
-        displayName: {
-          text: "Karim Hotel",
-          languageCode: "en"
-        },
+        displayName: "Karim Hotel",
         formattedAddress: "16, Gali Kababian, Jama Masjid, Old Delhi, Delhi, 110006, India",
         lat: 28.6494961,
         lng: 77.2337642,
@@ -30,3 +26,4 @@
       );
     }
   }
+

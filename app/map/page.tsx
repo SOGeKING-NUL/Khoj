@@ -1,12 +1,13 @@
 'use client';
 import axios from 'axios';
-import {APIProvider, Map, Marker} from '@vis.gl/react-google-maps';
+import {AdvancedMarker, APIProvider, Map, Marker, Pin} from '@vis.gl/react-google-maps';
 import {useState, useEffect} from 'react';
+import {Places} from "../types";
 
 export default function MapPage(){
   const [userLocation, setUserLocation]= useState<{lat: number, lng: number}>({lat: 28.6129, lng:77.2295});  //defaults to New Delhi
   const [places, setPlaces]=useState([]);
-  const [selectedPlace, setSelectedPlace]= useState([]);
+  const [selectedPlace, setSelectedPlace]= useState<Places | null>(null);
    
   //this is to get the user's location
   useEffect(()=>{
@@ -27,9 +28,15 @@ export default function MapPage(){
     getPlaces();
   }, []);  
 
+  useEffect(()=>{
+    if(!selectedPlace) return;
+    console.log("selected place is:", selectedPlace);  
+  },[selectedPlace])
+
   return(
     <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
-      <Map 
+      <Map
+      mapId={process.env.NEXT_PUBLIC_GOOGLE_MAP_ID!} 
       defaultCenter={userLocation}
       style={{width: '100vw', height: '100vh'}}
       defaultZoom={12}
@@ -40,21 +47,21 @@ export default function MapPage(){
       <Marker position={userLocation}/>
 
       {/*places marker*/}
-      {places.map((place)=> {
+      {places.map((place:Places)=> {
         return(
-          <Marker 
+          <AdvancedMarker 
           key={place.placeId} 
           position={{lat: place.lat, lng: place.lng}} 
-          title={place.displayName}
           onClick={()=>{
             setSelectedPlace(place);
-            console.log("selected place is:", selectedPlace);  
-          }}
-          icon={"https://maps.gstatic.com/mapfiles/place_api/icons/restaurant-71.png"}
-          />
+          }}>
+            <Pin
+            background={'#FFA500'}
+            glyphColor= 'white'
+            />
+          </AdvancedMarker>
         )
       })};
-
 
       </Map>
     </APIProvider>
