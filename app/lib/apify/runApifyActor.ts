@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import client from './apify'
 import "./schema"
-import { reelMetadataSchema } from './schema';
+import { reelMetadataSchema } from '../../schema';
 
 // const runHpix= await client.actor('hpix/ig-reels-scraper').call({
 //   "custom_functions": "{ shouldSkip: (data) => false, shouldContinue: (data) => true}",

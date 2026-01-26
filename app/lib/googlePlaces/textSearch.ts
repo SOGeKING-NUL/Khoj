@@ -1,6 +1,6 @@
 import client from"./client";
 import z from "zod";
-import {LocationSchema} from "../openrouter/schema";
+import {LocationSchema} from "../../schema";
 import path from 'path';
 
 export async function getLocationGeodata(locationSchema: z.infer<typeof LocationSchema>){
