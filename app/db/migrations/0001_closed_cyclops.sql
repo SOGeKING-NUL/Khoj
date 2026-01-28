@@ -1,0 +1,2 @@
+ALTER TABLE "reel_metadata" ADD COLUMN "place_id" text;--> statement-breakpoint
+ALTER TABLE "reel_metadata" ADD CONSTRAINT "reel_metadata_place_id_places_place_id_fk" FOREIGN KEY ("place_id") REFERENCES "public"."places"("place_id") ON DELETE no action ON UPDATE no action;

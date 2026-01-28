@@ -54,7 +54,7 @@ export async function getLocationGeodata(locationSchema: z.infer<typeof Location
 
         return {
             placeId: result.id,
-            displayName: result.displayName,
+            displayName: result.displayName?.text,
             formattedAddress: result.formattedAddress,
             lat: result.location?.latitude,
             lng: result.location?.longitude,

@@ -8,6 +8,20 @@
       "when": 1769576809199,
       "tag": "0000_brown_preak",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1769631199354,
+      "tag": "0001_closed_cyclops",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1769631291292,
+      "tag": "0002_misty_epoch",
+      "breakpoints": true
     }
   ]
 }
