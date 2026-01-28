@@ -22,6 +22,20 @@
       "when": 1769631291292,
       "tag": "0002_misty_epoch",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1769635038807,
+      "tag": "0003_greedy_echo",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1769636478666,
+      "tag": "0004_shocking_sersi",
+      "breakpoints": true
     }
   ]
 }

@@ -2,13 +2,13 @@ import {pgTable, text, boolean, timestamp} from "drizzle-orm/pg-core";
 import {places} from "./places";
 
 export const reelMetadata= pgTable('reel_metadata',{
-    shortCode: text('schortcode').primaryKey(),
+    shortCode: text('shortCode').primaryKey(),
     url: text('url'),
-    validation: boolean('validation'),
+    validation: boolean('validation').default(false),
     caption: text('caption'), 
     comments: text('comments').array(),
-    transcript: text('transcipt'),
-    hashtags: text('hastags'),
+    transcript: text('transcript'),
+    hashtags: text('hashtags'),
     place_id: text('place_id').references(()=>places.placeId),
 
     createdAt: timestamp('created_at', {withTimezone: true}).defaultNow()
