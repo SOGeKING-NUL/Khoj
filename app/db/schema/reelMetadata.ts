@@ -8,7 +8,7 @@ export const reelMetadata= pgTable('reel_metadata',{
     caption: text('caption'), 
     comments: text('comments').array(),
     transcript: text('transcript'),
-    hashtags: text('hashtags'),
+    hashtags: text('hashtags').array(),
     place_id: text('place_id').references(()=>places.placeId),
 
     createdAt: timestamp('created_at', {withTimezone: true}).defaultNow()

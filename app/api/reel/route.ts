@@ -3,6 +3,9 @@ import getReelData from "../../lib/apify/runApifyActor";
 import ExtractLocation from "@/app/lib/openrouter/extractLocation";
 import { getLocationGeodata } from "@/app/lib/googlePlaces/textSearch";
 
+import { db } from "@/app/db/db";
+import { reelMetadata } from "@/app/db/schema";
+
 export async function POST(req: NextRequest){
     
     try{
@@ -15,6 +18,18 @@ export async function POST(req: NextRequest){
         };
 
         const metadata= await getReelData(url);
+
+        const reelRow={
+              shortCode:   metadata.shortCode,
+              url:         metadata.url,
+              caption:     metadata.caption,
+              comments:    metadata.comments,
+              hashtags:     metadata.hashtags,
+              transcript:  metadata.transcript
+            }
+
+        await db.insert(reelMetadata).values(reelRow).onConflictDoNothing();
+
         const location= await ExtractLocation(metadata);
         const geodata= await getLocationGeodata(location);
         
