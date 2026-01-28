@@ -4,7 +4,8 @@ import ExtractLocation from "@/app/lib/openrouter/extractLocation";
 import { getLocationGeodata } from "@/app/lib/googlePlaces/textSearch";
 
 import { db } from "@/app/db/db";
-import { reelMetadata } from "@/app/db/schema";
+import { reelMetadata, places } from "@/app/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function POST(req: NextRequest){
     
@@ -32,6 +33,25 @@ export async function POST(req: NextRequest){
 
         const location= await ExtractLocation(metadata);
         const geodata= await getLocationGeodata(location);
+
+        if(location.spotFound && geodata?.placeId && geodata.lat && geodata.lng){
+
+            const placeRow={
+                placeId:            geodata.placeId,
+                displayName:        geodata.displayName,
+                formattedAddress:   geodata.formattedAddress,
+                lat:                geodata.lat,
+                lng:                geodata.lng,
+                type:               geodata.type
+            };
+
+            await db.insert(places).values(placeRow).onConflictDoNothing();
+            
+            await db.update(reelMetadata)
+                .set({place_id: geodata.placeId})
+                .where(eq(reelMetadata.shortCode, metadata.shortCode));
+
+        }
         
         return NextResponse.json({metadata, location, geodata});
 
