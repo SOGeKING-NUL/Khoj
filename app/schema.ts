@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PLACE_TYPE_PRIORITY } from "./lib/placesTypes";
 
 //lib/Apify
 export const Comments= z.object({
@@ -22,7 +23,7 @@ export const LocationSchema = z.object({
     spotFound: z.boolean(),
     place: z.object({
         name: z.string(),
-        type: z.enum(["restaurant", "cafe", "tourist_attraction", "temple", "mosque", "church", "park", "museum", "shopping_mall", "lodging", "natural_feature", "other"]),
+        type: z.enum(PLACE_TYPE_PRIORITY),
         locality: z.string(),
         city: z.string(),
         state: z.string(),

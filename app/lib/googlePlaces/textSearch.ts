@@ -2,6 +2,7 @@ import client from"./client";
 import z from "zod";
 import {LocationSchema} from "../../schema";
 import path from 'path';
+import { PLACE_TYPE_PRIORITY } from "../placesTypes";
 
 export async function getLocationGeodata(locationSchema: z.infer<typeof LocationSchema>){
     
@@ -42,13 +43,22 @@ export async function getLocationGeodata(locationSchema: z.infer<typeof Location
 
         const result= response.places[0];   //now the places variable is an array of best matches from the searchtext function, so we pull only the most relevant place
 
+        //normalizing place type to fit out array
+        function getType(types?: string[] | null){
+            if(!types) return 'other';
+            for(const i of PLACE_TYPE_PRIORITY){
+                if(types.includes(i)) return i;
+            };
+            return "other";
+        };
+
         return {
             placeId: result.id,
             displayName: result.displayName,
             formattedAddress: result.formattedAddress,
             lat: result.location?.latitude,
             lng: result.location?.longitude,
-            type: result.types
+            type: getType(result.types)
         };
     }catch(error){
         console.error("Error in getLocationGeodata:", error);
@@ -72,6 +82,6 @@ export async function getLocationGeodata(locationSchema: z.infer<typeof Location
 //     "reasoning": "Karim's is explicitly mentioned first in a food crawl itinerary through Old Delhi. Caption mentions multiple Delhi landmarks (Purani Dilli, Jama Masjid, Chandni Chowk) confirming the location. Karim's near Jama Masjid is a famous heritage restaurant and the most prominent spot as it starts the food tour."
 //   })
 //   .then(result => {
-//     console.log('✅ Success! Location retrieved:');
+//     console.log('Success! Location retrieved:');
 //     console.log(JSON.stringify(result));
 //   });
