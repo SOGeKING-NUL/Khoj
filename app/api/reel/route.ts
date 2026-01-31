@@ -25,7 +25,7 @@ export async function POST(req: NextRequest){
               url:         metadata.url,
               caption:     metadata.caption,
               comments:    metadata.comments,
-              hashtags:     metadata.hashtags,
+              hashtags:    metadata.hashtags,
               transcript:  metadata.transcript
             }
 
