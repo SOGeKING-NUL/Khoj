@@ -17,6 +17,7 @@ import { NextRequest } from "next/server";
                     email: event.data.email_addresses?.[0]?.email_address,  //returns array of objects for the address selected
                     firstName: event.data.first_name,
                     lastName: event.data.last_name,
+                    profileImageUrl: event.data.has_image? event.data.image_url : null
                 }
                 await db.insert(user).values(userData);
                 console.log('User created:', userData.userId);
