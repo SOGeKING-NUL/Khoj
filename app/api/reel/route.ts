@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import getReelData from "../../lib/apify/runApifyActor";
-import ExtractLocation from "@/app/lib/openrouter/extractLocation";
-import { getLocationGeodata } from "@/app/lib/googlePlaces/textSearch";
-
 import { db } from "@/app/db/db";
-import { reelMetadata, places } from "@/app/db/schema";
+import { reelMetadata, userPlaces } from "@/app/db/schema";
 import { eq } from "drizzle-orm";
 import { addReelJob } from "@/app/lib/queue/reel-queue";
 import { auth } from "@clerk/nextjs/server";
@@ -77,7 +73,7 @@ export async function POST(req: NextRequest){
 
         const {url}= await req.json();
 
-        if(!url || typeof url !== "string"){
+        if(!url || typeof(url) !== "string"){
             return NextResponse.json(
                 {error: "URL required"},
                 {status: 400}
@@ -95,6 +91,15 @@ export async function POST(req: NextRequest){
 
         //if reel already exists, return cached data instead of enqueuing a new job
         if (!result.isNew && result.existing) {
+
+            //update place in th user places table
+            const userPlacesData={
+                userId: userId,
+                placeId: result.existing.place_id,  
+            };
+            
+            await db.insert(userPlaces).values(userPlacesData).onConflictDoNothing();
+
             return NextResponse.json(
                 {
                     status: "cached",

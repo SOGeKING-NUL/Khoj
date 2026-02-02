@@ -2,7 +2,7 @@ import "dotenv/config";
 import { Worker } from "bullmq";
 import redisConnection from "./connection";
 import getReelData from "../apify/runApifyActor";
-import { places, reelMetadata } from "@/app/db/schema";
+import { places, reelMetadata, userPlaces } from "@/app/db/schema";
 import { db } from "@/app/db/db";
 import ExtractLocation from "../openrouter/extractLocation";
 import { getLocationGeodata } from "../googlePlaces/textSearch";
@@ -50,7 +50,14 @@ const worker = new Worker(
                 .set({place_id: geodata.placeId})
                 .where(eq(reelMetadata.shortCode, metadata.shortCode));
             
-            console.log('location found via google places api and db updated with data')
+            console.log('location found via google places api and db updated with data');
+
+            await db.insert(userPlaces).values({
+              userId: userId,
+              placeId: geodata.placeId
+            });
+
+            console.log("added place to user profile");
         };     
         
         return {ok: true, shortCode: metadata.shortCode};
