@@ -26,7 +26,11 @@ const worker = new Worker(
 
         await db.insert(reelMetadata).values(reelRow).onConflictDoNothing();
 
+        console.log("Apify worker finished, metadataextracted and stored in db");
+
         const location= await ExtractLocation(metadata);
+        console.log("location metadata extract via LLM");
+
         const geodata= await getLocationGeodata(location);
 
         if(location.spotFound && geodata?.placeId && geodata.lat && geodata.lng){
@@ -45,6 +49,8 @@ const worker = new Worker(
             await db.update(reelMetadata)
                 .set({place_id: geodata.placeId})
                 .where(eq(reelMetadata.shortCode, metadata.shortCode));
+            
+            console.log('location found via google places api and db updated with data')
         };     
         
         return {ok: true, shortCode: metadata.shortCode};
