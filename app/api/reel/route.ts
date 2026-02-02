@@ -9,6 +9,32 @@ import { eq } from "drizzle-orm";
 import { addReelJob } from "@/app/lib/queue/reel-queue";
 import { auth } from "@clerk/nextjs/server";
 
+function isInstagramReelOrPostUrl(rawUrl: string): boolean {
+
+    // ensure http is added
+    const candidate =
+        rawUrl.startsWith("http://") || rawUrl.startsWith("https://")
+            ? rawUrl
+            : `https://${rawUrl}`;
+
+    //makes it a URL type
+    let parsed: URL;
+    try {
+        parsed = new URL(candidate);
+    } catch {
+        return false;
+    }
+
+    //checks if url is from instagram
+    const host = parsed.hostname.toLowerCase();
+    const isInstagramHost =
+        host === "instagram.com" || host === "www.instagram.com";
+    if (!isInstagramHost) return false;
+
+    // accept both /p/<id> and /reel/<id>
+    return /^\/(p|reel)\/[A-Za-z0-9_-]+\/?$/.test(parsed.pathname);
+}
+
 export async function POST(req: NextRequest){
     
     try{
@@ -29,6 +55,13 @@ export async function POST(req: NextRequest){
             );
         };
 
+        if (typeof url !== "string" || !isInstagramReelOrPostUrl(url)) {
+            return NextResponse.json(
+                { error: "Invalid URL. Expected an Instagram link like instagram.com/p/<id>" },
+                { status: 400 }
+            );
+        }
+        
         const job= await addReelJob({userId, url});
 
         return NextResponse.json({
