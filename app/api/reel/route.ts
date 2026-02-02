@@ -8,33 +8,62 @@ import { reelMetadata, places } from "@/app/db/schema";
 import { eq } from "drizzle-orm";
 import { addReelJob } from "@/app/lib/queue/reel-queue";
 import { auth } from "@clerk/nextjs/server";
+import { ReelShortCodeSearch } from "@/app/types";
 
-function isInstagramReelOrPostUrl(rawUrl: string): boolean {
+function parseInstagramShortCode(rawUrl: string): string | null {
 
-    // ensure http is added
-    const candidate =
-        rawUrl.startsWith("http://") || rawUrl.startsWith("https://")
-            ? rawUrl
-            : `https://${rawUrl}`;
+  // Normalise to include scheme
+  const candidate =
+    rawUrl.startsWith("http://") || rawUrl.startsWith("https://")
+      ? rawUrl
+      : `https://${rawUrl}`;
 
-    //makes it a URL type
-    let parsed: URL;
-    try {
-        parsed = new URL(candidate);
-    } catch {
-        return false;
-    }
+  let parsed: URL;
+  try {
+    parsed = new URL(candidate);
+  }catch(err){
+    return null;
+  }
 
-    //checks if url is from instagram
-    const host = parsed.hostname.toLowerCase();
-    const isInstagramHost =
-        host === "instagram.com" || host === "www.instagram.com";
-    if (!isInstagramHost) return false;
+  //checks if url is from instagram
+  const host = parsed.hostname.toLowerCase();
+  const isInstagramHost =
+    host === "instagram.com" || host === "www.instagram.com";
+  if (!isInstagramHost) return null;
 
-    // accept both /p/<id> and /reel/<id>
-    return /^\/(p|reel)\/[A-Za-z0-9_-]+\/?$/.test(parsed.pathname);
+  // Path must start with /p/<id> or /reel/<id>, but can have extra segments after
+  const match = parsed.pathname.match(/^\/(p|reel)\/([A-Za-z0-9_-]+)(?:\/|$)/);
+  if (!match) return null;
+
+  return match[2]; // shortcode
 }
 
+async function isNewInstagramReelOrPostUrl(rawUrl: string): Promise<ReelShortCodeSearch> {
+  const shortCode = parseInstagramShortCode(rawUrl);
+
+  if (!shortCode) {
+    return {
+      valid: false,
+      isNew: false,
+      shortCode: null ,
+      existing: null ,
+    };
+  }
+
+  const row = await db
+    .select()
+    .from(reelMetadata)
+    .where(eq(reelMetadata.shortCode, shortCode));
+
+  const existing = row[0] ?? null;  // the ?? or the nullish operator fallbacks to th latter value if the former value is null or undeined so if row is emptty it becomes null
+
+  return {
+    valid: true,
+    isNew: row.length === 0,
+    shortCode,
+    existing,
+  };
+}
 export async function POST(req: NextRequest){
     
     try{
@@ -48,20 +77,34 @@ export async function POST(req: NextRequest){
 
         const {url}= await req.json();
 
-        if(!url){
+        if(!url || typeof url !== "string"){
             return NextResponse.json(
                 {error: "URL required"},
                 {status: 400}
             );
         };
 
-        if (typeof url !== "string" || !isInstagramReelOrPostUrl(url)) {
+        const result = await isNewInstagramReelOrPostUrl(url);
+
+        if (!result.valid) {
             return NextResponse.json(
-                { error: "Invalid URL. Expected an Instagram link like instagram.com/p/<id>" },
+                { error: "Invalid URL. Expected an Instagram reel/post link" },
                 { status: 400 }
             );
         }
-        
+
+        //if reel already exists, return cached data instead of enqueuing a new job
+        if (!result.isNew && result.existing) {
+            return NextResponse.json(
+                {
+                    status: "cached",
+                    metadata: result.existing,
+                },
+                { status: 200 }
+            );
+        }
+
+        // new reels are enqueued
         const job= await addReelJob({userId, url});
 
         return NextResponse.json({

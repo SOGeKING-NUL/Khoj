@@ -11,3 +11,10 @@
     userId: string,
     url: string
   }
+
+  export type ReelShortCodeSearch= {
+    valid: boolean,
+    isNew: boolean,
+    shortCode: string | null,
+    existing: {} | null
+  }
