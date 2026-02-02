@@ -50,12 +50,14 @@ const worker = new Worker(
                 .set({place_id: geodata.placeId})
                 .where(eq(reelMetadata.shortCode, metadata.shortCode));
             
-            console.log('location found via google places api and db updated with data');
+            console.log(`location found via google places api ${geodata.placeId} and db updated with ${userId}data`);
 
-            await db.insert(userPlaces).values({
-              userId: userId,
-              placeId: geodata.placeId
-            });
+            const userPlacesData={
+                userId: userId,
+                placeId: geodata.placeId 
+            };
+            
+            await db.insert(userPlaces).values(userPlacesData).onConflictDoNothing();
 
             console.log("added place to user profile");
         };     

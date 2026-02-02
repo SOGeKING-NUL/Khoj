@@ -1,29 +1,41 @@
   // app/api/places/route.ts
-  import { NextResponse } from 'next/server';
+import { db } from '@/app/db/db';
+import { places, userPlaces } from '@/app/db/schema';
+import { auth } from '@clerk/nextjs/server';
+import { eq } from 'drizzle-orm';
+import { NextRequest, NextResponse } from 'next/server';
 
-  export async function GET() {
-    try {
-      const places = [{
-        placeId: "ChIJyy_Vxxj9DDkRPXF11X7EfT0",
-        displayName: "Karim Hotel",
-        formattedAddress: "16, Gali Kababian, Jama Masjid, Old Delhi, Delhi, 110006, India",
-        lat: 28.6494961,
-        lng: 77.2337642,
-        type: [
-          "indian_restaurant",
-          "restaurant",
-          "food",
-          "point_of_interest",
-          "establishment"
-        ]
-      }];
+export async function GET(req: NextRequest){
+  try {
 
-      return NextResponse.json(places);
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Failed to fetch places' },
-        { status: 500 }
-      );
+    const {userId}= await auth();
+
+    if(!userId){
+        return NextResponse.json({
+            error: 'unauthorized'
+        }, {status: 401})
     }
+
+    const rows= await db
+                .select({
+                    placeId: places.placeId,
+                    displayName: places.displayName,
+                    formattedAddress: places.formattedAddress,
+                    lat: places.lat,
+                    lng: places.lng,
+                    type: places.type,
+                  })
+                .from(places)
+                .innerJoin(userPlaces, eq( places.placeId, userPlaces.placeId))
+                .where(eq(userPlaces.userId, userId));
+
+    return NextResponse.json(rows);
+
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Failed to fetch places' },
+      { status: 500 }
+    );
   }
+}
 
