@@ -6,3 +6,8 @@
     lng: number,
     type: [string]
   }
+
+  export interface ReelJobData{
+    userId: string,
+    url: string
+  }

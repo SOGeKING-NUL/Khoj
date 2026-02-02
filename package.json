@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "worker": " npx tsx ./app/lib/queue/reel-worker.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.36.10",
@@ -17,7 +18,10 @@
     "ai": "^5.0.121",
     "apify-client": "^2.21.0",
     "axios": "^1.13.2",
+    "bullmq": "^5.67.2",
+    "dotenv": "^17.2.3",
     "drizzle-orm": "^0.45.1",
+    "ioredis": "^5.9.2",
     "next": "16.1.2",
     "react": "19.2.3",
     "svix": "^1.84.1",

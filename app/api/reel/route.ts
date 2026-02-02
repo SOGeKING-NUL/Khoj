@@ -6,11 +6,22 @@ import { getLocationGeodata } from "@/app/lib/googlePlaces/textSearch";
 import { db } from "@/app/db/db";
 import { reelMetadata, places } from "@/app/db/schema";
 import { eq } from "drizzle-orm";
+import { addReelJob } from "@/app/lib/queue/reel-queue";
+import { auth } from "@clerk/nextjs/server";
 
 export async function POST(req: NextRequest){
     
     try{
+        const {userId}= await auth();
+
+        if(!userId){
+            return NextResponse.json({
+                error: 'unauthorized'
+            }, {status: 401})
+        }
+
         const {url}= await req.json();
+
         if(!url){
             return NextResponse.json(
                 {error: "URL required"},
@@ -18,48 +29,19 @@ export async function POST(req: NextRequest){
             );
         };
 
-        const metadata= await getReelData(url);
+        const job= await addReelJob({userId, url});
 
-        const reelRow={
-              shortCode:   metadata.shortCode,
-              url:         metadata.url,
-              caption:     metadata.caption,
-              comments:    metadata.comments,
-              hashtags:    metadata.hashtags,
-              transcript:  metadata.transcript
-            }
-
-        await db.insert(reelMetadata).values(reelRow).onConflictDoNothing();
-
-        const location= await ExtractLocation(metadata);
-        const geodata= await getLocationGeodata(location);
-
-        if(location.spotFound && geodata?.placeId && geodata.lat && geodata.lng){
-
-            const placeRow={
-                placeId:            geodata.placeId,
-                displayName:        geodata.displayName,
-                formattedAddress:   geodata.formattedAddress,
-                lat:                geodata.lat,
-                lng:                geodata.lng,
-                type:               geodata.type
-            };
-
-            await db.insert(places).values(placeRow).onConflictDoNothing();
-            
-            await db.update(reelMetadata)
-                .set({place_id: geodata.placeId})
-                .where(eq(reelMetadata.shortCode, metadata.shortCode));
-
-        }
-        
-        return NextResponse.json({metadata, location, geodata});
-
+        return NextResponse.json({
+            status: 'processing',
+            jobId: job.id
+        }, {status:202})
 
     }catch(err){
+        const message = err instanceof Error ? err.message : String(err);
+        console.error("Reel enqueue failed:", err);
         return NextResponse.json(
-            {error: "failed to run api: ", err},
-            {status: 500}
-        )
+            { error: "failed to enqueue reel", message },
+            { status: 500 }
+        );
     }
 }
