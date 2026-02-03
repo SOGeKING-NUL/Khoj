@@ -19,7 +19,7 @@ async function getReelData(reelUrl:string): Promise<z.infer< typeof reelMetadata
     const run = await client.actor("apify/instagram-reel-scraper").call({
     "includeDownloadedVideo": false,
     "includeSharesCount": false,
-    "includeTranscript": false,
+    "includeTranscript": true,
     "resultsLimit": 2,
     "skipPinnedPosts": false,
     "username": [

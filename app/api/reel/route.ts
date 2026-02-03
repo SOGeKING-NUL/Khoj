@@ -92,13 +92,14 @@ export async function POST(req: NextRequest){
         //if reel already exists, return cached data instead of enqueuing a new job
         if (!result.isNew && result.existing) {
 
-            //update place in th user places table
-            const userPlacesData={
-                userId: userId,
-                placeId: result.existing.place_id,  
-            };
-            
-            await db.insert(userPlaces).values(userPlacesData).onConflictDoNothing();
+            // only add to user_places if a place was actually found for this reel
+            if (result.existing.place_id) {
+                const userPlacesData = {
+                    userId: userId,
+                    placeId: result.existing.place_id,
+                };
+                await db.insert(userPlaces).values(userPlacesData).onConflictDoNothing();
+            }
 
             return NextResponse.json(
                 {

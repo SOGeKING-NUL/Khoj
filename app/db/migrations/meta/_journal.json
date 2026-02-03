@@ -64,6 +64,20 @@
       "when": 1769875381462,
       "tag": "0008_bizarre_major_mapleleaf",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1770121430072,
+      "tag": "0009_dashing_magus",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1770122600226,
+      "tag": "0010_tranquil_zodiak",
+      "breakpoints": true
     }
   ]
 }

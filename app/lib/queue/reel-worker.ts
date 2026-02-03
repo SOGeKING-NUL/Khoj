@@ -26,7 +26,7 @@ const worker = new Worker(
 
         await db.insert(reelMetadata).values(reelRow).onConflictDoNothing();
 
-        console.log("Apify worker finished, metadataextracted and stored in db");
+        console.log("Apify worker finished, metadataextracted and stored in db:", metadata);
 
         const location= await ExtractLocation(metadata);
         console.log("location metadata extract via LLM");
