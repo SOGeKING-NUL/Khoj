@@ -10,7 +10,7 @@ export interface Places{
   formattedAddress: string,
   lat: number,
   lng: number,
-  type: [string]
+  type: string
 }
 
 export interface ReelJobData{

@@ -3,6 +3,7 @@ import axios from 'axios';
 import {AdvancedMarker, APIProvider, Map, Marker, Pin} from '@vis.gl/react-google-maps';
 import {useState, useEffect} from 'react';
 import {Places} from "../types";
+import { PLACE_TYPE_PRIORITY, PLACE_TYPE_COLORS} from '../lib/placesTypes';
 
 export default function MapPage(){
   const [userLocation, setUserLocation]= useState<{lat: number, lng: number}>({lat: 28.6129, lng:77.2295});  //defaults to New Delhi
@@ -56,8 +57,8 @@ export default function MapPage(){
             setSelectedPlace(place);
           }}>
             <Pin
-            background={'#FFA500'}
-            glyphColor= 'white'
+              background={PLACE_TYPE_COLORS[place.type as keyof (typeof PLACE_TYPE_COLORS)] ?? "#95A5A6"}
+              glyphColor='white'
             />
           </AdvancedMarker>
         )
