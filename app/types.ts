@@ -24,3 +24,15 @@ export type ReelShortCodeSearch= {
   shortCode: string | null,
   existing: ReelMetadataRow | null
 }
+
+export interface MapPlaceDetails {
+  placeId: string;
+  displayName: string;
+  formattedAddress: string;
+  rating?: number;
+  userRatingCount?: number;
+  website?: string;
+  phone?: string;
+  openingHours?: string[];
+  photos?: string[];
+}

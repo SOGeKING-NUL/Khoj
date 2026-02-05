@@ -2,13 +2,16 @@
 import axios from 'axios';
 import {AdvancedMarker, APIProvider, Map, Marker, Pin} from '@vis.gl/react-google-maps';
 import {useState, useEffect} from 'react';
-import {Places} from "../types";
-import { PLACE_TYPE_PRIORITY, PLACE_TYPE_COLORS} from '../lib/placesTypes';
+import {MapPlaceDetails, Places} from "../types";
+import { PLACE_TYPE_COLORS} from '../lib/placesTypes';
 
 export default function MapPage(){
   const [userLocation, setUserLocation]= useState<{lat: number, lng: number}>({lat: 28.6129, lng:77.2295});  //defaults to New Delhi
   const [places, setPlaces]=useState([]);
   const [selectedPlace, setSelectedPlace]= useState<Places | null>(null);
+  const [placeDetails, setPlaceDetails] = useState<MapPlaceDetails | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
    
   //this is to get the user's location
   useEffect(()=>{
@@ -29,43 +32,239 @@ export default function MapPage(){
     getPlaces();
   }, []);  
 
+  // Fetch place details when a place is selected
   useEffect(()=>{
-    if(!selectedPlace) return;
-    console.log("selected place is:", selectedPlace);  
-  },[selectedPlace])
+    if(!selectedPlace) {
+      setSidebarOpen(false);
+      return;
+    }
+
+    const place = selectedPlace; // Capture for async to ensure the current place details shown is for the selected one
+
+    async function fetchDetails() {
+
+      console.log(selectedPlace);
+
+      setLoadingDetails(true);
+      setSidebarOpen(true);
+
+      try {
+        const response = await axios.get(`/api/places/${place.placeId}`);
+        setPlaceDetails(response.data);
+
+      } catch (error) {
+        
+        console.error("Failed to fetch place details:", error);
+
+        setPlaceDetails({
+          placeId: place.placeId,
+          displayName: place.displayName,
+          formattedAddress: place.formattedAddress,
+        });
+      }
+      setLoadingDetails(false);
+    }
+
+    fetchDetails();
+  },[selectedPlace]);
+
+  const closeSidebar= ()=>{
+    setSidebarOpen(false);
+    setTimeout(()=>{
+      setSelectedPlace(null);
+      setPlaceDetails(null);
+    }, 300)  //wating for closing transiiton to complete
+  }
 
   return(
-    <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
-      <Map
-      mapId={process.env.NEXT_PUBLIC_GOOGLE_MAP_ID!} 
-      defaultCenter={userLocation}
-      style={{width: '100vw', height: '100vh'}}
-      defaultZoom={12}
-      gestureHandling='greedy'
-      disableDefaultUI= {false}>
+    <div className='relative w-screen h-screen overflow-hidden'>
+      <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
+        <Map
+        mapId={process.env.NEXT_PUBLIC_GOOGLE_MAP_ID!} 
+        defaultCenter={userLocation}
+        style={{width: '100vw', height: '100vh'}}
+        defaultZoom={12}
+        gestureHandling='greedy'
+        disableDefaultUI= {false}>
+        
+        {/*user marker*/}
+        <Marker position={userLocation}/>
+
+        {/*places marker*/}
+        {places.map((place:Places)=> {
+          return(
+            <AdvancedMarker 
+            key={place.placeId} 
+            position={{lat: place.lat, lng: place.lng}} 
+            onClick={()=>{
+              setSelectedPlace(place);
+            }}>
+              <Pin
+                background={PLACE_TYPE_COLORS[place.type as keyof (typeof PLACE_TYPE_COLORS)] ?? "#95A5A6"}
+                glyphColor='white'
+                scale= {selectedPlace?.placeId == place.placeId? 1.3 : 1}
+              />
+            </AdvancedMarker>
+          )
+        })};
+        </Map>
+      </APIProvider>
       
-      {/*user marker*/}
-      <Marker position={userLocation}/>
+      {/* Overlay backdrop for mobile */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-foreground/20 md:hidden z-10 transition-opacity duration-300"
+          onClick={closeSidebar}
+        />
+      )}
+      
+      <div className={`
+          fixed bg-background shadow-lg z-20 border-l border-border
+          transition-transform duration-300 ease-in-out
+          
+          /* Mobile: bottom sheet taking 70% height */
+          inset-x-0 bottom-0 h-[70vh] rounded-t-2xl
+          ${sidebarOpen ? 'translate-y-0' : 'translate-y-full'}
+          
+          /* Desktop: right sidebar */
+          md:inset-y-0 md:right-0 md:left-auto md:bottom-auto
+          md:w-[380px] md:h-full md:rounded-none
+          ${sidebarOpen ? 'md:translate-x-0' : 'md:translate-x-full'}
+          md:translate-y-0
+        `}>
 
-      {/*places marker*/}
-      {places.map((place:Places)=> {
-        return(
-          <AdvancedMarker 
-          key={place.placeId} 
-          position={{lat: place.lat, lng: place.lng}} 
-          onClick={()=>{
-            setSelectedPlace(place);
-          }}>
-            <Pin
-              background={PLACE_TYPE_COLORS[place.type as keyof (typeof PLACE_TYPE_COLORS)] ?? "#95A5A6"}
-              glyphColor='white'
-            />
-          </AdvancedMarker>
-        )
-      })};
+          {/* header */}
+          <div className='flex item-center justify-between border-b px-5 py-4 '>
+            <h1> {loadingDetails ? "loading..." : placeDetails?.displayName}</h1>
+            <button onClick={closeSidebar}>
+              <img src="./cross.svg" className='w-5 h-5'></img>
+            </button>
+          </div>
 
-      </Map>
-    </APIProvider>
-  )
+          {/* content */}
+          <div className="overflow-y-auto h-[calc(100%-80px)] md:h-[calc(100%-56px)]">
+            {loadingDetails ? (
+              <div className="p-5 space-y-4 animate-pulse">
+                <div className="h-44 bg-muted rounded-lg"/>
+                <div className="h-3 bg-muted rounded w-3/4"/>
+                <div className="h-3 bg-muted rounded w-1/2"/>
+              </div>
+            ) : placeDetails ? (
+              <div className="p-5 space-y-4">
+                {/* Photos - now direct URLs from API */}
+                {placeDetails.photos && placeDetails.photos.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="h-44 rounded-lg overflow-hidden bg-muted">
+                      <img 
+                        src={placeDetails.photos[0]}
+                        alt={placeDetails.displayName}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).parentElement!.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                    {placeDetails.photos.length > 1 && (
+                      <div className="flex gap-2">
+                        {placeDetails.photos.slice(1, 4).map((photo, i) => (
+                          <div key={i} className="flex-1 h-16 rounded-md overflow-hidden bg-muted">
+                            <img 
+                              src={photo}
+                              alt={`${placeDetails.displayName} ${i + 2}`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).parentElement!.style.display = 'none';
+                              }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
+                {/* Rating */}
+                {placeDetails.rating && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-yellow-400">★</span>
+                    <span className="text-sm font-medium text-foreground">{placeDetails.rating.toFixed(1)}</span>
+                    {placeDetails.userRatingCount && (
+                      <span className="text-muted-foreground text-sm">
+                        ({placeDetails.userRatingCount.toLocaleString()})
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Address */}
+                <div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{placeDetails.formattedAddress}</p>
+                </div>
+
+                {/* Phone */}
+                {placeDetails.phone && (
+                  <a 
+                    href={`tel:${placeDetails.phone}`}
+                    className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                    </svg>
+                    {placeDetails.phone}
+                  </a>
+                )}
+
+                {/* Website */}
+                {placeDetails.website && (
+                  <a 
+                    href={placeDetails.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                    <span className="truncate">{placeDetails.website.replace(/^https?:\/\//, '')}</span>
+                  </a>
+                )}
+
+                {/* Opening Hours */}
+                {placeDetails.openingHours && placeDetails.openingHours.length > 0 && (
+                  <details className="text-sm">
+                    <summary className="text-muted-foreground cursor-pointer hover:text-foreground">Opening hours</summary>
+                    <ul className="mt-2 space-y-0.5 text-muted-foreground">
+                      {placeDetails.openingHours.map((day, i) => (
+                        <li key={i}>{day}</li>
+                      ))}
+                    </ul>
+                  </details>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-2">
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace?.lat},${selectedPlace?.lng}&destination_place_id=${placeDetails.placeId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 bg-foreground hover:bg-foreground/90 text-background text-center py-2.5 px-4 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Directions
+                  </a>
+                  <a
+                    href={`https://www.google.com/maps/place/?q=place_id:${placeDetails.placeId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 border border-border hover:bg-accent text-foreground text-center py-2.5 px-4 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    View on Maps
+                  </a>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+      </div>
+  </div>
+  );
 }
