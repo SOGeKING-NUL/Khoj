@@ -1,11 +1,15 @@
 'use client';
 import axios from 'axios';
 import {AdvancedMarker, APIProvider, Map, Marker, Pin} from '@vis.gl/react-google-maps';
-import {useState, useEffect} from 'react';
+import {useState, useEffect, Suspense} from 'react';
 import {MapPlaceDetails, Places} from "../types";
 import { PLACE_TYPE_COLORS} from '../lib/placesTypes';
+import { useSearchParams } from 'next/navigation';
 
-export default function MapPage(){
+function MapContent() {
+  const searchParams = useSearchParams();
+  const placeIdFromUrl = searchParams.get('place');
+  
   const [userLocation, setUserLocation]= useState<{lat: number, lng: number}>({lat: 28.6129, lng:77.2295});  //defaults to New Delhi
   const [places, setPlaces]=useState([]);
   const [selectedPlace, setSelectedPlace]= useState<Places | null>(null);
@@ -28,9 +32,17 @@ export default function MapPage(){
     async function getPlaces(){
       const response=await axios.get("api/places");
         setPlaces(response.data);
+        
+        // If there's a place ID in URL, select it
+        if (placeIdFromUrl) {
+          const place = response.data.find((p: Places) => p.placeId === placeIdFromUrl);
+          if (place) {
+            setSelectedPlace(place);
+          }
+        }
     };
     getPlaces();
-  }, []);  
+  }, [placeIdFromUrl]);  
 
   // Fetch place details when a place is selected
   useEffect(()=>{
@@ -266,5 +278,18 @@ export default function MapPage(){
 
       </div>
   </div>
+  );
+}
+
+
+export default function MapPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center w-screen h-screen">
+        <div className="text-muted-foreground">Loading map...</div>
+      </div>
+    }>
+      <MapContent />
+    </Suspense>
   );
 }

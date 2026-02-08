@@ -57,7 +57,9 @@ const worker = new Worker(
                 placeId: geodata.placeId 
             };
             
-            await db.insert(userPlaces).values(userPlacesData).onConflictDoNothing();
+            await db.insert(userPlaces)
+                .values(userPlacesData)
+                .onConflictDoNothing({ target: [userPlaces.userId, userPlaces.placeId] });
 
             console.log("added place to user profile");
         };     

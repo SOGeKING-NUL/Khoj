@@ -98,7 +98,9 @@ export async function POST(req: NextRequest){
                     userId: userId,
                     placeId: result.existing.place_id,
                 };
-                await db.insert(userPlaces).values(userPlacesData).onConflictDoNothing();
+                await db.insert(userPlaces)
+                    .values(userPlacesData)
+                    .onConflictDoNothing({ target: [userPlaces.userId, userPlaces.placeId] });
             }
 
             return NextResponse.json(
