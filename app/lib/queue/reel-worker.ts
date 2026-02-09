@@ -2,7 +2,7 @@ import "dotenv/config";
 import { Worker } from "bullmq";
 import redisConnection from "./connection";
 import getReelData from "../apify/runApifyActor";
-import { places, reelMetadata, userPlaces } from "@/app/db/schema";
+import { places, reelMetadata, userPlaces, userReels } from "@/app/db/schema";
 import { db } from "@/app/db/db";
 import ExtractLocation from "../openrouter/extractLocation";
 import { getLocationGeodata } from "../googlePlaces/textSearch";
@@ -21,12 +21,24 @@ const worker = new Worker(
               caption:     metadata.caption,
               comments:    metadata.comments,
               hashtags:    metadata.hashtags,
-              transcript:  metadata.transcript
+              transcript:  metadata.transcript,
+              thumbnail:   metadata.thumbnail
             }
 
         await db.insert(reelMetadata).values(reelRow).onConflictDoNothing();
 
         console.log("Apify worker finished, metadataextracted and stored in db:", metadata);
+
+        // Save user-reel relationship
+        const userReelData = {
+            userId: userId,
+            shortCode: metadata.shortCode
+        };
+        await db.insert(userReels)
+            .values(userReelData)
+            .onConflictDoNothing({ target: [userReels.userId, userReels.shortCode] });  //this ensure if the user tries to save the same reel twice then it just ignores it
+
+        console.log("User-reel relationship saved");
 
         const location= await ExtractLocation(metadata);
         console.log("location metadata extract via LLM");
