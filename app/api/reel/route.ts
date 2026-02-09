@@ -7,7 +7,6 @@ import { auth } from "@clerk/nextjs/server";
 import { ReelShortCodeSearch } from "@/app/types";
 
 function parseInstagramShortCode(rawUrl: string): string | null {
-
   // Normalise to include scheme
   const candidate =
     rawUrl.startsWith("http://") || rawUrl.startsWith("https://")
@@ -27,11 +26,20 @@ function parseInstagramShortCode(rawUrl: string): string | null {
     host === "instagram.com" || host === "www.instagram.com";
   if (!isInstagramHost) return null;
 
-  // Path must start with /p/<id> or /reel/<id>, but can have extra segments after
-  const match = parsed.pathname.match(/^\/(p|reel)\/([A-Za-z0-9_-]+)(?:\/|$)/);
-  if (!match) return null;
+  const patterns = [
+    /^\/(p|reel|reels)\/([A-Za-z0-9_-]+)(?:\/|$)/,           // /reel/ABC123 or /reels/ABC123
+    /^\/[^\/]+\/(reel|reels)\/([A-Za-z0-9_-]+)(?:\/|$)/,    // /username/reel/ABC123
+  ];
 
-  return match[2]; // shortcode
+  for (const pattern of patterns) {
+    const match = parsed.pathname.match(pattern);
+    if (match) {
+      // Return the shortcode (last capture group)
+      return match[match.length - 1];
+    }
+  }
+
+  return null;
 }
 
 async function isNewInstagramReelOrPostUrl(rawUrl: string): Promise<ReelShortCodeSearch> {
