@@ -23,33 +23,52 @@ export default function Nav(){
   }, []);
 
   return(
-    <nav className="flex w-full justify-between items-center px-6 py-4">
-        <Link href='/' className= "text-xl font-bold text-forground">Khoji</Link>
+    <nav className="flex w-full justify-between items-center px-6 py-4 relative z-50">
+        <Link href='/' className= "text-xl font-bold text-forground">Khoj</Link>
 
-        {isSignedIn && isLoaded && (
-            <div className='relative flex items-center' ref={dropdownRef}>
-            <span className= 'text-foreground px-4'>
-                {user?.firstName || "User"}
-            </span>
+        <div className="flex items-center gap-4">
+          {isSignedIn && isLoaded && (
+            <>
+              <Link 
+                href="/map" 
+                className="text-foreground hover:text-muted-foreground transition-colors"
+              >
+                Map
+              </Link>
+              
+              <div className='relative flex items-center' ref={dropdownRef}>
+                <button 
+                  onClick={() => setShowDropdown(!showDropdown)} 
+                  className="rounded-full overflow-hidden w-10 h-10 border-2 border-border hover:border-foreground transition-colors"
+                >
+                  <img src={user.imageUrl} alt="Profile" className="object-cover w-full h-full"/>
+                </button>
 
-            <button onClick={()=> setShowDropdown(true)} className="rounded-full overflow-hidden w-10 h-10">
-                <img src={user.imageUrl} alt= "P" className="object-cover"/>
-            </button>
-
-            {showDropdown && (
-                <div className=" absolute right-0 top-full mt-2 bg-white dark:bg-grey-800 border rounded md shadow-lg">
-                    <button onClick={()=> signOut()}>SIGNOUT</button>
-                </div>
-            )}
-
-            </div>
-        )}
+                {showDropdown && (
+                  <div className="absolute right-0 top-full mt-2 bg-background border border-border rounded-lg shadow-lg py-2 min-w-[160px]">
+                    <Link 
+                      href="/profile" 
+                      className="block px-4 py-2 text-foreground hover:bg-accent transition-colors"
+                      onClick={() => setShowDropdown(false)}
+                    >
+                      Profile
+                    </Link>
+                    <button 
+                      onClick={() => signOut()} 
+                      className="w-full text-left px-4 py-2 text-foreground hover:bg-accent transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
         {isLoaded && !isSignedIn && (
-            <Link href="/auth">Sign In</Link>
+            <Link href="/auth" className= "bg-foreground text-background px-4 py-2 rounded-lg hover:bg-foreground/90 transition-colors">Sign In</Link>
         )}
-
-
+        </div>
     </nav>
   )
 }
