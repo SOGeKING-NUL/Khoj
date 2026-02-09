@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/app/db/db";
-import { reelMetadata, userPlaces } from "@/app/db/schema";
+import { reelMetadata, userPlaces, userReels } from "@/app/db/schema";
 import { eq } from "drizzle-orm";
 import { addReelJob } from "@/app/lib/queue/reel-queue";
 import { auth } from "@clerk/nextjs/server";
@@ -99,6 +99,15 @@ export async function POST(req: NextRequest){
 
         //if reel already exists, return cached data instead of enqueuing a new job
         if (!result.isNew && result.existing) {
+
+            // Save user-reel relationship
+            const userReelData = {
+                userId: userId,
+                shortCode: result.existing.shortCode
+            };
+            await db.insert(userReels)
+                .values(userReelData)
+                .onConflictDoNothing({ target: [userReels.userId, userReels.shortCode] });
 
             // only add to user_places if a place was actually found for this reel
             if (result.existing.place_id) {

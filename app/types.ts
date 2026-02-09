@@ -36,3 +36,13 @@ export interface MapPlaceDetails {
   openingHours?: string[];
   photos?: string[];
 }
+
+export interface UserReelWithPlace {
+  shortCode: string;
+  url: string;
+  caption: string | null;
+  thumbnail: string | null;
+  savedAt: Date | null;
+  validation: boolean;
+  placeId: string | null;
+}

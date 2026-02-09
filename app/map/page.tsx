@@ -1,12 +1,19 @@
 'use client';
 import axios from 'axios';
 import {AdvancedMarker, APIProvider, Map, Marker, Pin} from '@vis.gl/react-google-maps';
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useRef} from 'react';
 import {MapPlaceDetails, Places} from "../types";
 import { PLACE_TYPE_COLORS} from '../lib/placesTypes';
+import { useSearchParams } from 'next/navigation';
 
 export default function MapPage(){
+  const searchParams = useSearchParams();
+  const placeIdFromUrl = searchParams.get('place');
+  const mapRef = useRef<google.maps.Map | null>(null);
+  
   const [userLocation, setUserLocation]= useState<{lat: number, lng: number}>({lat: 28.6129, lng:77.2295});  //defaults to New Delhi
+  const [initialCenter, setInitialCenter] = useState<{lat: number, lng: number}>({lat: 28.6129, lng:77.2295});
+  const [initialZoom, setInitialZoom] = useState(12);
   const [places, setPlaces]=useState([]);
   const [selectedPlace, setSelectedPlace]= useState<Places | null>(null);
   const [placeDetails, setPlaceDetails] = useState<MapPlaceDetails | null>(null);
@@ -28,9 +35,18 @@ export default function MapPage(){
     async function getPlaces(){
       const response=await axios.get("api/places");
         setPlaces(response.data);
+      
+      if (placeIdFromUrl) {
+        const place = response.data.find((place: Places) => place.placeId === placeIdFromUrl);
+        if (place) {
+          setInitialCenter({lat: place.lat, lng: place.lng});
+          setInitialZoom(15);
+          setSelectedPlace(place);
+        }
+      }
     };
     getPlaces();
-  }, []);  
+  }, [placeIdFromUrl]);  
 
   // Fetch place details when a place is selected
   useEffect(()=>{
@@ -77,13 +93,14 @@ export default function MapPage(){
   }
 
   return(
-    <div className='relative w-screen h-screen overflow-hidden'>
+    <div className='relative w-full h-full overflow-hidden'>
       <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!}>
         <Map
+        key={`${initialCenter.lat}-${initialCenter.lng}`}
         mapId={process.env.NEXT_PUBLIC_GOOGLE_MAP_ID!} 
-        defaultCenter={userLocation}
-        style={{width: '100vw', height: '100vh'}}
-        defaultZoom={12}
+        defaultCenter={initialCenter}
+        defaultZoom={initialZoom}
+        style={{width: '100%', height: '100%'}}
         gestureHandling='greedy'
         disableDefaultUI= {false}>
         
@@ -113,13 +130,13 @@ export default function MapPage(){
       {/* Overlay backdrop for mobile */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-foreground/20 md:hidden z-10 transition-opacity duration-300"
+          className="absolute inset-0 bg-foreground/20 md:hidden z-10 transition-opacity duration-300"
           onClick={closeSidebar}
         />
       )}
       
       <div className={`
-          fixed bg-background shadow-lg z-20 border-l border-border
+          absolute bg-background shadow-lg z-40 border-l border-border
           transition-transform duration-300 ease-in-out
           
           /* Mobile: bottom sheet taking 70% height */
@@ -128,7 +145,7 @@ export default function MapPage(){
           
           /* Desktop: right sidebar */
           md:inset-y-0 md:right-0 md:left-auto md:bottom-auto
-          md:w-[380px] md:h-full md:rounded-none
+          md:w-95 md:h-full md:rounded-none
           ${sidebarOpen ? 'md:translate-x-0' : 'md:translate-x-full'}
           md:translate-y-0
         `}>

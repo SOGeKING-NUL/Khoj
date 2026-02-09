@@ -29,9 +29,12 @@ export default function RootLayout({
       <html lang="en">
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+          style={{margin:0,padding:0,height:'100vh',overflow:'hidden'}}
         >
         <Nav/>
+        <main style={{height:'calc(100vh - 73px)',overflow:'auto',position:'relative'}}>
           {children}
+        </main>
         </body>
       </html>
     </ClerkProvider>
