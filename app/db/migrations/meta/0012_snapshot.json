@@ -1,0 +1,14 @@
+{
+  "id": "0012_fix_validation_trigger",
+  "prevId": "0011_flashy_tomas",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {},
+  "enums": {},
+  "schemas": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  }
+}

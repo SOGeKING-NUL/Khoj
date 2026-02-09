@@ -85,6 +85,13 @@
       "when": 1770645659450,
       "tag": "0011_flashy_tomas",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1770646000000,
+      "tag": "0012_fix_validation_trigger",
+      "breakpoints": true
     }
   ]
 }
